@@ -1,4 +1,5 @@
-let cities;
+let cities = "Города";
+let tickets = "Билеты";
 
 const API_URL = "http://api.travelpayouts.com/data/ru/cities.json";
 const DIRECT_TICKET_URL =
@@ -15,24 +16,24 @@ const departureDropdown = form.querySelector(".dropdown__cities-from");
 const destinationInput = form.querySelector(".input__cities-to");
 const destinationDropdown = form.querySelector(".dropdown__cities-to");
 
-function getData(method, url, cb) {
-  const xhr = new XMLHttpRequest();
-  xhr.open(method, url);
-  xhr.send();
-  xhr.addEventListener("load", function() {
+function parseResponse(xhr, arr) {
+  return function() {
     switch (xhr.status) {
       case SUCCESS_CODE:
-        cities = JSON.parse(xhr.response);
-        if (cb) {
-          cb();
-        }
-
+        arr = JSON.parse(xhr.response);
         break;
 
       default:
         console.error();
     }
-  });
+  };
+}
+
+function getData(method, url, arr, cb) {
+  const xhr = new XMLHttpRequest();
+  xhr.open(method, url);
+  xhr.send();
+  xhr.addEventListener("load", parseResponse(xhr, arr));
 }
 
 function removePopup() {
@@ -51,7 +52,7 @@ function createCitiesList(filteredCities, dropdown) {
   dropdown.append(documentFragment);
 }
 
-function showCities(evt, dropdown) {
+function showCities(evt, dropdown, cities) {
   closeDropdown(dropdown);
   let inputValue = evt.target.value;
 
@@ -83,11 +84,11 @@ function closeDropdown(dropdown) {
 }
 
 departureInput.addEventListener("input", function(evt) {
-  showCities(evt, departureDropdown);
+  showCities(evt, departureDropdown, cities);
 });
 
 destinationInput.addEventListener("input", function(evt) {
-  showCities(evt, destinationDropdown);
+  showCities(evt, destinationDropdown, cities);
 });
 
 departureDropdown.addEventListener("click", function(evt) {
@@ -98,4 +99,4 @@ destinationDropdown.addEventListener("click", function(evt) {
   inputSelectedCity(evt, destinationInput, destinationDropdown);
 });
 
-getData(METHOD, PROXY_URL + API_URL, removePopup);
+getData(METHOD, PROXY_URL + API_URL, cities);
