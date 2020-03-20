@@ -36,9 +36,9 @@ function getData(method, url, arr, cb) {
   xhr.addEventListener("load", parseResponse(xhr, arr));
 }
 
-function removePopup() {
-  popup.classList.remove("popup--visible");
-}
+// function removePopup() {
+//   popup.classList.remove("popup--visible");
+// }
 
 function createCitiesList(filteredCities, dropdown) {
   const documentFragment = document.createDocumentFragment();
