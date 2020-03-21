@@ -1,44 +1,21 @@
-let cities = "Города";
-let tickets = "Билеты";
+const initialState = {
+  isLoading: false,
+  cities: [],
+  tickets: [],
+  departureCity: '',
+  destinationCity: '',
+  departureDate: '',
+};
 
-const API_URL = "http://api.travelpayouts.com/data/ru/cities.json";
-const DIRECT_TICKET_URL =
-  "http://api.travelpayouts.com/v1/prices/direct?origin=MOW&destination=LED&depart_date=2017-11&return_date=2017-12&token=";
-const API_KEY = "efddf8e209d90edc9b0ef6ff1ecdff8a";
-const PROXY_URL = "https://cors-anywhere.herokuapp.com/";
-const METHOD = "GET";
-const SUCCESS_CODE = 200;
+const stateMachine = new StateMachine(initialState);
 
 const popup = document.querySelector(".popup");
 const form = document.querySelector(".form-search");
 const departureInput = form.querySelector(".input__cities-from");
 const departureDropdown = form.querySelector(".dropdown__cities-from");
+const departureDate = form.querySelector('#form-departure-date');
 const destinationInput = form.querySelector(".input__cities-to");
 const destinationDropdown = form.querySelector(".dropdown__cities-to");
-
-function parseResponse(xhr, arr) {
-  return function() {
-    switch (xhr.status) {
-      case SUCCESS_CODE:
-        arr = JSON.parse(xhr.response);
-        break;
-
-      default:
-        console.error();
-    }
-  };
-}
-
-function getData(method, url, arr, cb) {
-  const xhr = new XMLHttpRequest();
-  xhr.open(method, url);
-  xhr.send();
-  xhr.addEventListener("load", parseResponse(xhr, arr));
-}
-
-// function removePopup() {
-//   popup.classList.remove("popup--visible");
-// }
 
 function createCitiesList(filteredCities, dropdown) {
   const documentFragment = document.createDocumentFragment();
@@ -52,31 +29,16 @@ function createCitiesList(filteredCities, dropdown) {
   dropdown.append(documentFragment);
 }
 
-function showCities(evt, dropdown, cities) {
-  closeDropdown(dropdown);
-  let inputValue = evt.target.value;
-
+const getCitiesList = (inputValue) => {
   if (/[а-яА-ЯЁё]$/.test(inputValue)) {
     const searchPattern = new RegExp(`^${inputValue}`, "i");
 
-    const filteredCities = cities.filter(city => {
+    return stateMachine.getState().cities.filter(city => {
       return searchPattern.test(city.name);
-    });
-
-    if (filteredCities.length) {
-      createCitiesList(filteredCities, dropdown);
-    }
-  }
-}
-
-function inputSelectedCity(evt, input, dropdown) {
-  const target = evt.target;
-
-  if (target.tagName === "LI") {
-    input.value = target.textContent;
+    }) || [];
   }
 
-  closeDropdown(dropdown);
+  return [];
 }
 
 function closeDropdown(dropdown) {
@@ -84,19 +46,95 @@ function closeDropdown(dropdown) {
 }
 
 departureInput.addEventListener("input", function(evt) {
-  showCities(evt, departureDropdown, cities);
+  const departureCity = evt.target.value;
+  const filteredCities = getCitiesList(departureCity);
+
+  stateMachine.setState({
+    departureCity,
+  });
+
+  closeDropdown(departureDropdown);
+  createCitiesList(filteredCities, departureDropdown);
 });
 
 destinationInput.addEventListener("input", function(evt) {
-  showCities(evt, destinationDropdown, cities);
+  const destinationCity = evt.target.value;
+  const filteredCities = getCitiesList(destinationCity);
+
+  stateMachine.setState({
+    destinationCity,
+  });
+
+  closeDropdown(destinationDropdown);
+  createCitiesList(filteredCities, destinationDropdown);
 });
 
 departureDropdown.addEventListener("click", function(evt) {
-  inputSelectedCity(evt, departureInput, departureDropdown);
+  if (evt.target.tagName === "LI") {
+    const departureCity = evt.target.textContent;
+    stateMachine.setState({
+      departureCity,
+    });
+  }
+  closeDropdown(departureDropdown);
 });
 
 destinationDropdown.addEventListener("click", function(evt) {
-  inputSelectedCity(evt, destinationInput, destinationDropdown);
+  if (evt.target.tagName === "LI") {
+    const destinationCity = evt.target.textContent;
+    stateMachine.setState({
+      destinationCity,
+    });
+  }
+
+  closeDropdown(destinationDropdown);
 });
 
-getData(METHOD, PROXY_URL + API_URL, cities);
+departureDate.addEventListener('change', (event) => {
+  stateMachine.setState({
+    departureDate: event.target.value,
+  });
+});
+
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  stateMachine.setState({
+    isLoading: true,
+  });
+
+  // emulate xhr request
+  setTimeout(() => {
+    stateMachine.setState({
+      isLoading: false,
+    });
+  }, 500);
+});
+
+const handleLoadingState = (state) => {
+  if (state.isLoading) {
+    loader.classList.remove('hidden');
+    window['form-wrapper'].classList.add('hidden');
+  } else {
+    loader.classList.add('hidden');
+    window['form-wrapper'].classList.remove('hidden');
+  }
+}
+
+const handleDepartureCityChange = state => {
+  departureInput.value = state.departureCity;
+}
+
+const handleDestinationCityChange = state => {
+  destinationInput.value = state.destinationCity;
+}
+
+stateMachine.subscribe(handleLoadingState);
+stateMachine.subscribe(handleDepartureCityChange);
+stateMachine.subscribe(handleDestinationCityChange);
+
+api.getCities().then(cities => {
+  stateMachine.setState({
+    cities,
+    isLoading: false,
+  });
+});

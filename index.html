@@ -11,8 +11,10 @@
 <body>
 	<h1>Авиасалес</h1>
 	<main>
-
-		<section class="wrapper">
+		<div id="loader" class="text-center">
+			<img src="./img/loading.gif" alt="Loading icon">
+		</div>
+		<section id="form-wrapper" class="wrapper hidden">
 			<form class="form-search">
 				<div class="wrapper__search">
 					<div class="input" style="display: block;">
@@ -35,7 +37,7 @@
 
 					<div class="input input__cities-from">
 						<label>Отправление
-							<input type="date" class="input__date-depart" required>
+							<input id="form-departure-date" type="date" class="input__date-depart" required>
 						</label>
 					</div>
 				</div>
@@ -60,9 +62,9 @@
 		</section>
 	</main>
   <!-- <div class="popup popup--visible"><p>Пожалуйста, подождите!...</p></div> -->
-  <script src="script.js">
-
-  </script>
+  <script src="state-machine.js"></script>
+  <script src="api.js"></script>
+  <script src="script.js"></script>
 </body>
 
 </html>
