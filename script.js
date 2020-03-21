@@ -1,5 +1,5 @@
-let cities = "Города";
-let tickets = "Билеты";
+let cities = [];
+let tickets;
 
 const API_URL = "http://api.travelpayouts.com/data/ru/cities.json";
 const DIRECT_TICKET_URL =
@@ -16,11 +16,11 @@ const departureDropdown = form.querySelector(".dropdown__cities-from");
 const destinationInput = form.querySelector(".input__cities-to");
 const destinationDropdown = form.querySelector(".dropdown__cities-to");
 
-function parseResponse(xhr, arr) {
+function parseResponse(xhr, cb) {
   return function() {
     switch (xhr.status) {
       case SUCCESS_CODE:
-        arr = JSON.parse(xhr.response);
+        cb(JSON.parse(xhr.response));
         break;
 
       default:
@@ -29,16 +29,16 @@ function parseResponse(xhr, arr) {
   };
 }
 
-function getData(method, url, arr, cb) {
+function getData(method, url, cb) {
   const xhr = new XMLHttpRequest();
   xhr.open(method, url);
   xhr.send();
-  xhr.addEventListener("load", parseResponse(xhr, arr));
+  xhr.addEventListener("load", parseResponse(xhr, cb));
 }
 
-// function removePopup() {
-//   popup.classList.remove("popup--visible");
-// }
+function removePopup() {
+  popup.classList.remove("popup--visible");
+}
 
 function createCitiesList(filteredCities, dropdown) {
   const documentFragment = document.createDocumentFragment();
@@ -99,4 +99,7 @@ destinationDropdown.addEventListener("click", function(evt) {
   inputSelectedCity(evt, destinationInput, destinationDropdown);
 });
 
-getData(METHOD, PROXY_URL + API_URL, cities);
+getData(METHOD, PROXY_URL + API_URL, data => {
+  cities = data;
+  removePopup();
+});
